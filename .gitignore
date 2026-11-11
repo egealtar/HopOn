@@ -1,0 +1,49 @@
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Meta files are kept; only ignore one when its asset is ignored
+!/[Aa]ssets/**/*.meta
+
+# Rider plugin, generated
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# IDE and solution files (Unity regenerates them)
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Gradle
+.gradle/
+
+# Crash reports
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.app
+*.unitypackage
+
+# macOS
+.DS_Store
