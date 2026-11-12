@@ -37,6 +37,8 @@ namespace HopOn.World
         [SerializeField] private BusView busPrefab;
         [Tooltip("One material per colour, in this order: Red, Blue, Green, Yellow, Purple, Orange.")]
         [SerializeField] private Material[] colorMaterials = new Material[6];
+        [Tooltip("The same colours for the buses, in the same order. They carry the bus's detail map, which only fits the bus's UVs, so the passengers keep their own.")]
+        [SerializeField] private Material[] busMaterials = new Material[6];
 
         [Tooltip("The camera that shows the level: it frames each level and turns taps into cells. Empty: the main camera.")]
         [SerializeField] private BoardCamera boardCamera;
@@ -301,7 +303,7 @@ namespace HopOn.World
                 BusView bus = Instantiate(busPrefab, _root);
                 bus.name = $"Bus {i}";
                 bus.transform.localPosition = BoardLayout.BusSlot(i - buses.CurrentIndex);
-                bus.Paint(colorMaterials[(int)buses.ColorAt(i)]);
+                bus.Paint(busMaterials[(int)buses.ColorAt(i)]);
                 _buses[i] = bus;
             }
             if (!buses.AllGone)

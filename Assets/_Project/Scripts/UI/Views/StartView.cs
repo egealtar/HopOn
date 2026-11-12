@@ -15,6 +15,8 @@ namespace HopOn.UI
         [SerializeField] private Button playButton;
         [SerializeField] private TMP_Text playButtonLabel;
         [SerializeField] private TMP_Text timeText;
+        [Tooltip("The 3D scenery behind this screen (the start town). On while the screen shows, off once Play is pressed.")]
+        [SerializeField] private GameObject scenery;
 
         private UIScreen _screen;
 
@@ -36,12 +38,22 @@ namespace HopOn.UI
         {
             playButtonLabel.text = $"Level {levelNumber}";
             timeText.text = TimeFormat.Clock(seconds);
+            SetScenery(true);
             _screen.Show(instant);
         }
 
         public void Hide(bool instant = false)
         {
+            SetScenery(false);
             _screen.Hide(instant);
+        }
+
+        private void SetScenery(bool on)
+        {
+            if (scenery != null)
+            {
+                scenery.SetActive(on);
+            }
         }
 
         private void OnPlayClicked()
