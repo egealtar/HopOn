@@ -4,7 +4,7 @@ using UnityEngine;
 namespace HopOn.UI
 {
     /// <summary>
-    /// One full-screen UI screen (Start, HUD, Win, Lose).
+    /// One full-screen UI screen (Start, HUD, Win, Lose), a nested Canvas under the root Canvas.
     /// Each screen has its own Canvas, so a change on one screen (the HUD timer ticking) never
     /// rebuilds the others, and a hidden screen costs nothing to draw.
     /// Show: Canvas on, fade in, input on at the end (no tapping a half-visible button).
@@ -18,55 +18,62 @@ namespace HopOn.UI
         private Canvas _canvas;
         private CanvasGroup _group;
 
-        public bool IsVisible { get; private set; }
-
-        // Fetched on first use, not in Awake: another script may call Show/Hide from its own
-        // Awake, and Unity does not say which object's Awake runs first.
-        private Canvas Canvas => _canvas != null ? _canvas : (_canvas = GetComponent<Canvas>());
-        private CanvasGroup Group => _group != null ? _group : (_group = GetComponent<CanvasGroup>());
+        private void Awake()
+        {
+            _canvas = GetComponent<Canvas>();
+            _group = GetComponent<CanvasGroup>();
+        }
 
         public void Show(bool instant = false)
         {
-            IsVisible = true;
-            Group.DOKill();             // one tween owner: a running fade must not fight this one
-            Canvas.enabled = true;
+            _group.DOKill();            // one tween owner: a running fade must not fight this one
+            _canvas.enabled = true;
             if (instant)
             {
-                Group.alpha = 1f;
+                _group.alpha = 1f;
                 SetInput(true);
                 return;
             }
             SetInput(false);
-            Group.DOFade(1f, fadeSeconds)
+            _group.DOFade(1f, fadeSeconds)
                 .SetUpdate(true)        // unscaled time: still animates if the game is paused
-                .OnComplete(() => SetInput(true));
+                .OnComplete(EnableInput);
         }
 
         public void Hide(bool instant = false)
         {
-            IsVisible = false;
-            Group.DOKill();
+            _group.DOKill();
             SetInput(false);
             if (instant)
             {
-                Group.alpha = 0f;
-                Canvas.enabled = false;
+                _group.alpha = 0f;
+                _canvas.enabled = false;
                 return;
             }
-            Group.DOFade(0f, fadeSeconds)
+            _group.DOFade(0f, fadeSeconds)
                 .SetUpdate(true)
-                .OnComplete(() => Canvas.enabled = false);
+                .OnComplete(DisableCanvas);
+        }
+
+        private void EnableInput()
+        {
+            SetInput(true);
+        }
+
+        private void DisableCanvas()
+        {
+            _canvas.enabled = false;
         }
 
         private void SetInput(bool on)
         {
-            Group.interactable = on;
-            Group.blocksRaycasts = on;
+            _group.interactable = on;
+            _group.blocksRaycasts = on;
         }
 
         private void OnDestroy()
         {
-            Group.DOKill();
+            _group.DOKill();
         }
     }
 }

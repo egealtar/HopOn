@@ -1,5 +1,7 @@
+using HopOn.Data;
 using HopOn.Logic;
 using HopOn.UI;
+using HopOn.World;
 using UnityEngine;
 
 namespace HopOn.Flow
@@ -8,39 +10,48 @@ namespace HopOn.Flow
     {
         Start,
         Playing,
+        Ending,     // the session has decided; waiting for the animations to reach that moment
         Won,
         Lost,
     }
 
     /// <summary>
-    /// The game's flow: which state it is in and what each screen shows.
-    /// Start -> Playing -> Won -> Start (next level), or Playing -> Lost -> Start (same level).
-    /// It talks to whole screens (views), never to their buttons or texts: it tells a view what to
-    /// show, and listens to the view's events for what the player pressed.
-    /// Every transition checks the current state first, so a double tap, or a win and a time-up in
-    /// the same frame, can never run a transition twice.
+    /// The game's flow and the one place that wires everything together: it loads the current
+    /// level, creates its <see cref="LevelSession"/>, feeds it time and shows the right screen.
+    /// Start -> Playing -> Ending -> Won -> Start (next level), or ... -> Lost -> Start (same level).
+    /// It never decides a win or a loss: the session does. The flow reads the session's State
+    /// every frame, waits until the picture has caught up, then shows the matching screen.
+    /// It talks to whole screens (views), never to their buttons or texts, and every handler
+    /// checks the current state first, so a double tap can never run a transition twice.
     /// </summary>
     public sealed class GameFlow : MonoBehaviour
     {
+        // A view bug must never trap the player: the result shows after this long at the latest.
+        // A real ending can take over 3 s (a last long walk, then several buses leaving in a row),
+        // so this is far above that; when it fires, the warning in the console means a view bug.
+        private const float MaxEndingSeconds = 8f;
+
+        [SerializeField] private LevelCatalog levelCatalog;
+        [SerializeField] private LevelView levelView;
+
         [Header("Screens")]
         [SerializeField] private StartView startView;
         [SerializeField] private HudView hudView;
         [SerializeField] private WinView winView;
         [SerializeField] private LoseView loseView;
 
-        [Header("Prototype (replaced by level data later)")]
-        [SerializeField] private float levelSeconds = 90f;
-
+        private ILevelProvider _levels;
+        private LevelSession _session;
         private GameState _state;
-        private int _levelIndex;            // 0-based; the player sees _levelIndex + 1
-        private LevelTimer _timer;
-
-        public GameState State => _state;
-
-        private int LevelNumber => _levelIndex + 1;
+        private int _levelIndex;            // which catalog level is played
+        private int _levelNumber = 1;       // what the player sees; keeps counting after the last level
+        private float _endingSeconds;
 
         private void Awake()
         {
+            // Phones default to 30 frames per second; walks and bus moves look much smoother at 60.
+            Application.targetFrameRate = 60;
+            _levels = new CatalogLevelProvider(levelCatalog);
             startView.PlayPressed += OnPlayPressed;
             winView.NextPressed += OnNextPressed;
             loseView.RetryPressed += OnRetryPressed;
@@ -51,41 +62,67 @@ namespace HopOn.Flow
             startView.PlayPressed -= OnPlayPressed;
             winView.NextPressed -= OnNextPressed;
             loseView.RetryPressed -= OnRetryPressed;
-            ReleaseTimer();
         }
 
         private void Start()
         {
-            // Start, not Awake: by now every view has run its own Awake.
-            EnterStart(instant: true);
+            // Start, not Awake: by now every screen has run its own Awake.
+            LoadLevel(instant: true);
         }
 
         private void Update()
         {
-            if (_state != GameState.Playing)
+            if (_state == GameState.Playing)
             {
-                return;
+                _session.Tick(Time.deltaTime);
+                hudView.SetTime(_session.RemainingSeconds);
+                if (_session.State != SessionState.Playing)
+                {
+                    _state = GameState.Ending;
+                    _endingSeconds = 0f;
+                }
             }
-            _timer.Tick(Time.deltaTime);
-            hudView.SetTime(_timer.DisplaySeconds);
-
-#if UNITY_EDITOR
-            // TEMP until the gameplay exists: W wins the level. Editor only, never in a build.
-            if (Input.GetKeyDown(KeyCode.W))
+            if (_state == GameState.Ending)
             {
-                Win();
+                _endingSeconds += Time.deltaTime;
+                if (PictureHasCaughtUp())
+                {
+                    ShowResult();
+                }
+                else if (_endingSeconds >= MaxEndingSeconds)
+                {
+                    Debug.LogWarning($"The level view did not finish within {MaxEndingSeconds} s; showing the result anyway.");
+                    ShowResult();
+                }
             }
-#endif
         }
 
-        // ---- States ----
-
-        private void EnterStart(bool instant)
+        // When to show the result, as in Bus Jam:
+        // won: once the last bus has driven off;
+        // no seats: the moment the last waiting seat is sat in on screen (anyone still walking
+        // freezes where it is, but a rider in mid-jump lands first);
+        // time up: at once.
+        private bool PictureHasCaughtUp()
         {
-            _state = GameState.Start;
-            NewTimer(levelSeconds);
+            if (_session.State == SessionState.Won)
+            {
+                return !levelView.IsBusy;
+            }
+            if (_session.LoseReason == LoseReason.NoSeats)
+            {
+                return (levelView.WaitingSeatsLookFull && !levelView.SomeoneInMidAir) || !levelView.IsBusy;
+            }
+            return true;
+        }
 
-            startView.Show(LevelNumber, _timer.DisplaySeconds, instant);
+        // A fresh session for the current level, waiting behind the start screen.
+        private void LoadLevel(bool instant)
+        {
+            _session = new LevelSession(_levels.Get(_levelIndex));
+            _state = GameState.Start;
+            levelView.Show(_session);
+
+            startView.Show(_levelNumber, _session.RemainingSeconds, instant);
             hudView.Hide(instant: true);
             winView.Hide(instant);
             loseView.Hide(instant);
@@ -98,79 +135,46 @@ namespace HopOn.Flow
                 return;
             }
             _state = GameState.Playing;
-            hudView.SetLevel(LevelNumber);
-            hudView.SetTime(_timer.DisplaySeconds);
-
+            hudView.SetLevel(_levelNumber);
+            hudView.SetTime(_session.RemainingSeconds);
             startView.Hide();
             hudView.Show();
-            _timer.Start();
+            _session.Start();
         }
 
-        public void Win()
+        private void ShowResult()
         {
-            if (_state != GameState.Playing)
-            {
-                return;
-            }
-            _timer.Stop();
-            _state = GameState.Won;
+            levelView.Freeze();
             hudView.Hide();
-            winView.Show(LevelNumber + 1);
-        }
-
-        public void Lose(LoseReason reason)
-        {
-            if (_state != GameState.Playing)
+            if (_session.State == SessionState.Won)
             {
-                return;
+                _state = GameState.Won;
+                // After the last level the list starts again from the first, while the number keeps counting.
+                _levelIndex = (_levelIndex + 1) % _levels.Count;
+                _levelNumber++;
+                winView.Show(_levelNumber);
             }
-            _timer.Stop();
-            _state = GameState.Lost;
-            hudView.Hide();
-            loseView.Show(reason);
+            else
+            {
+                _state = GameState.Lost;
+                loseView.Show(_session.LoseReason);
+            }
         }
 
         private void OnNextPressed()
         {
-            if (_state != GameState.Won)
+            if (_state == GameState.Won)
             {
-                return;
+                LoadLevel(instant: false);
             }
-            _levelIndex++;
-            EnterStart(instant: false);
         }
 
         private void OnRetryPressed()
         {
-            if (_state != GameState.Lost)
+            if (_state == GameState.Lost)
             {
-                return;
+                LoadLevel(instant: false);
             }
-            EnterStart(instant: false);
-        }
-
-        // ---- Timer ----
-
-        private void NewTimer(float seconds)
-        {
-            ReleaseTimer();                 // the old level's timer must not keep a line to us
-            _timer = new LevelTimer(seconds);
-            _timer.Expired += OnTimeUp;
-        }
-
-        private void ReleaseTimer()
-        {
-            if (_timer == null)
-            {
-                return;
-            }
-            _timer.Expired -= OnTimeUp;
-            _timer = null;
-        }
-
-        private void OnTimeUp()
-        {
-            Lose(LoseReason.TimeUp);
         }
     }
 }

@@ -1,6 +1,6 @@
 {
-    "name": "HopOn.UI",
-    "rootNamespace": "HopOn.UI",
+    "name": "HopOn.Game",
+    "rootNamespace": "HopOn",
     "references": [
         "HopOn.Logic",
         "Unity.TextMeshPro",

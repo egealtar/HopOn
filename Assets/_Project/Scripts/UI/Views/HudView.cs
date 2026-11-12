@@ -25,14 +25,15 @@ namespace HopOn.UI
 
         // Called every frame by the flow; writes only when the shown second changes, because a
         // text change rebuilds the HUD's canvas.
-        public void SetTime(int seconds)
+        public void SetTime(float remainingSeconds)
         {
-            if (seconds == _shownSeconds)
+            int whole = TimeFormat.WholeSeconds(remainingSeconds);
+            if (whole == _shownSeconds)
             {
                 return;
             }
-            _shownSeconds = seconds;
-            timeText.text = TimeFormat.Clock(seconds);
+            _shownSeconds = whole;
+            timeText.text = TimeFormat.Clock(remainingSeconds);
         }
 
         public void Show(bool instant = false)

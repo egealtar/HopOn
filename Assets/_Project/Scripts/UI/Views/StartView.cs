@@ -31,7 +31,8 @@ namespace HopOn.UI
             playButton.onClick.RemoveListener(OnPlayClicked);
         }
 
-        public void Show(int levelNumber, int seconds, bool instant = false)
+        /// <param name="seconds">The time the player will have: the full limit, or what is left of a resumed level.</param>
+        public void Show(int levelNumber, float seconds, bool instant = false)
         {
             playButtonLabel.text = $"Level {levelNumber}";
             timeText.text = TimeFormat.Clock(seconds);

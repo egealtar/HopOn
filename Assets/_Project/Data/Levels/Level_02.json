@@ -1,0 +1,10 @@
+{
+    "timeLimitSeconds": 60,
+    "buses": "BRRG",
+    "cells": [
+        ".RRR.",
+        "GBGRB",
+        "B#.#R",
+        ".GR.."
+    ]
+}
