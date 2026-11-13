@@ -11,8 +11,10 @@ namespace HopOn.World
     /// </summary>
     public static class BoardLayout
     {
-        // The board prefabs (tile, obstacle) are made one unit wide, so this is not a free setting.
-        private const float CellSize = 1f;
+        // The board prefabs (tile, waiting spot, obstacle) are modelled for this cell size, so it is
+        // not a free setting. Below the passengers' and buses' scale on purpose: the people fill
+        // their cells and stand close together.
+        private const float CellSize = 0.8f;
 
         /// <summary>The biggest board a level may have: the camera frames every board to fill the
         /// screen, and beyond this the cells get too small to tap well on a phone. The game rules work
@@ -25,16 +27,16 @@ namespace HopOn.World
 
         private const float WaitingRowZ = 1.6f;
         private const float BusDoorZ = 2.35f;           // on the sidewalk, just before the curb at 2.5
-        private const float BusDoorSpacing = 0.4f;
+        private const float BusDoorSpacing = 0.5f;
         private const float BusStopZ = 3.3f;
-        private const float BusSpacing = 2.6f;
+        private const float BusSpacing = 3.2f;
         private const float BusExitX = 9f;
 
         // Sizes the camera framing needs, measured on the prefabs.
         private const float HeadHeight = 1f;            // a standing passenger's head
-        private const float BusHalfLength = 1.14f;      // the bus is 2.28 long and about 1 wide
-        private const float BusHalfWidth = 0.5f;
-        private const float BusTop = 1.4f;              // the head of a rider sitting in a bus
+        private const float BusHalfLength = 1.42f;      // the bus is 2.84 long and about 1.2 wide
+        private const float BusHalfWidth = 0.6f;
+        private const float BusTop = 1.57f;             // the head of a rider sitting in a bus
 
         /// <summary>Columns are centred on x = 0; rows run towards the camera.</summary>
         public static Vector3 CellToWorld(GridPos cell, int boardWidth)

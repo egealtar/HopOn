@@ -1,69 +1,71 @@
 using DG.Tweening;
+using HopOn.World;
 using UnityEngine;
 
 namespace HopOn.UI
 {
     /// <summary>
-    /// The start logo's way in after the boot scene. It starts where the boot scene left it (in the
-    /// middle, bigger, over the same sunset picture), so the change of scene cannot be seen, then
-    /// flies up to its own place while the picture fades and the 3D street shows; the Level button
-    /// and the timer come last. Its own place is read from the layout, so it lands right on any
-    /// screen. Once per launch: Next and Retry show the start screen without it.
+    /// The way from the boot scene into the start screen. Both scenes show the same still 3D street
+    /// (the StartTown prefab with the same seed) and the logo where the boot scene left it, so the
+    /// change of scene cannot be seen. The logo's own Animator plays its letters boarding their bus;
+    /// as that bus drives off, the street starts to move, the real bus drives in (its own Animator)
+    /// and the wind starts; the Level button and the timer come last.
+    /// Once per launch: Next and Retry find the street already moving.
     /// </summary>
     public sealed class LogoIntro : MonoBehaviour
     {
         private static bool _played;
 
+        [Tooltip("The logo's wrapper with the boarding Animator: centred and sized like the boot scene's logo.")]
         [SerializeField] private RectTransform logo;
-        [Tooltip("Must equal the Scale of the Logo in the Boot scene: the logo starts at that size, so the change of scene cannot be seen.")]
-        [SerializeField] private float bootScale = 1f;
-        [Tooltip("The sunset picture over the street; the same picture as the boot scene's.")]
-        [SerializeField] private CanvasGroup curtain;
+        [Tooltip("The street behind the start screen: still until the logo has left.")]
+        [SerializeField] private StartTown town;
+        [Tooltip("Off until the street starts: the bus (it drives in), the wind, the leaves.")]
+        [SerializeField] private GameObject[] showOnGo;
         [Tooltip("The Level button and the timer: shown last, and not tappable before.")]
         [SerializeField] private CanvasGroup[] controls;
-        [SerializeField] private float holdSeconds = 0.15f;
-        [SerializeField] private float flySeconds = 0.75f;
+        [Tooltip("When the street starts: as the logo's bus drives off.")]
+        [SerializeField] private float goSeconds = 1.75f;
+        [Tooltip("After the street starts: time for the bus to drive in before the button shows.")]
+        [SerializeField] private float controlsDelay = 0.5f;
         [SerializeField] private float controlsSeconds = 0.3f;
 
         private void Start()
         {
             if (_played)
             {
-                curtain.gameObject.SetActive(false);
+                logo.gameObject.SetActive(false);
+                Go();
                 return;
             }
             _played = true;
-
-            // Where the logo lives on this screen, before it is moved to the boot scene's pose.
-            Vector2 anchorMin = logo.anchorMin;
-            Vector2 anchorMax = logo.anchorMax;
-            Vector2 position = logo.anchoredPosition;
-            Vector3 scale = logo.localScale;
-            logo.anchorMin = logo.anchorMax = new Vector2(0.5f, 0.5f);
-            logo.anchoredPosition = Vector2.zero;
-            logo.localScale = scale * bootScale;
             foreach (CanvasGroup group in controls)
             {
                 SetShown(group, false);
             }
 
             Sequence intro = DOTween.Sequence().SetLink(gameObject);
-            intro.AppendInterval(holdSeconds);
-            intro.Append(logo.DOAnchorMin(anchorMin, flySeconds).SetEase(Ease.InOutCubic));
-            intro.Join(logo.DOAnchorMax(anchorMax, flySeconds).SetEase(Ease.InOutCubic));
-            intro.Join(logo.DOAnchorPos(position, flySeconds).SetEase(Ease.InOutCubic));
-            intro.Join(logo.DOScale(scale, flySeconds).SetEase(Ease.OutBack));
-            intro.Join(curtain.DOFade(0f, flySeconds));
+            intro.AppendInterval(goSeconds);
+            intro.AppendCallback(Go);
             foreach (CanvasGroup group in controls)
             {
-                intro.Insert(holdSeconds + flySeconds, group.DOFade(1f, controlsSeconds));
+                intro.Insert(goSeconds + controlsDelay, group.DOFade(1f, controlsSeconds));
             }
             intro.OnComplete(Finish);
         }
 
+        private void Go()
+        {
+            town.StartMoving();
+            foreach (GameObject thing in showOnGo)
+            {
+                thing.SetActive(true);
+            }
+        }
+
         private void Finish()
         {
-            curtain.gameObject.SetActive(false);
+            logo.gameObject.SetActive(false);
             foreach (CanvasGroup group in controls)
             {
                 SetShown(group, true);

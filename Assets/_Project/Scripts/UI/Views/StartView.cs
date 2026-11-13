@@ -36,6 +36,7 @@ namespace HopOn.UI
         /// <param name="seconds">The time the player will have: the full limit, or what is left of a resumed level.</param>
         public void Show(int levelNumber, float seconds, bool instant = false)
         {
+            playButton.interactable = true;
             playButtonLabel.text = $"Level {levelNumber}";
             timeText.text = TimeFormat.Clock(seconds);
             SetScenery(true);
@@ -58,6 +59,9 @@ namespace HopOn.UI
 
         private void OnPlayClicked()
         {
+            // Locked at once: a second tap cannot start the level twice, and the button plays its
+            // Disabled animation (the pop) while the curtain waits for it.
+            playButton.interactable = false;
             PlayPressed?.Invoke();
         }
     }

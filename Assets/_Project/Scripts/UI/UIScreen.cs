@@ -18,6 +18,9 @@ namespace HopOn.UI
         private Canvas _canvas;
         private CanvasGroup _group;
 
+        /// <summary>How long Show and Hide take.</summary>
+        public float FadeSeconds => fadeSeconds;
+
         private void Awake()
         {
             _canvas = GetComponent<Canvas>();

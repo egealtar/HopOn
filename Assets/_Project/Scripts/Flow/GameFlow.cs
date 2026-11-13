@@ -1,3 +1,4 @@
+using System.Collections;
 using HopOn.Data;
 using HopOn.Logic;
 using HopOn.UI;
@@ -39,6 +40,10 @@ namespace HopOn.Flow
         [SerializeField] private HudView hudView;
         [SerializeField] private WinView winView;
         [SerializeField] private LoseView loseView;
+        [Tooltip("Covers the change from the start screen to the level.")]
+        [SerializeField] private UIScreen curtain;
+        [Tooltip("How long the Level button's press animation plays before the curtain closes.")]
+        [SerializeField] private float pressSeconds = 0.35f;
 
         private ILevelProvider _levels;
         private LevelSession _session;
@@ -134,11 +139,24 @@ namespace HopOn.Flow
             {
                 return;
             }
-            _state = GameState.Playing;
+            StartCoroutine(EnterLevel());
+        }
+
+        // The button's press animation, then the curtain closes, the level is set up behind it and the
+        // curtain opens; only then does the clock start. The state stays Start until that moment (the
+        // start screen has locked its button), so no time passes before the player sees the board.
+        private IEnumerator EnterLevel()
+        {
+            yield return new WaitForSeconds(pressSeconds);
+            curtain.Show();
+            yield return new WaitForSeconds(curtain.FadeSeconds);
             hudView.SetLevel(_levelNumber);
             hudView.SetTime(_session.RemainingSeconds);
-            startView.Hide();
-            hudView.Show();
+            startView.Hide(instant: true);
+            hudView.Show(instant: true);
+            curtain.Hide();
+            yield return new WaitForSeconds(curtain.FadeSeconds);
+            _state = GameState.Playing;
             _session.Start();
         }
 
