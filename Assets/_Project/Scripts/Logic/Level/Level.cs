@@ -86,6 +86,24 @@ namespace HopOn.Logic
         public static bool TryCreate(string id, IReadOnlyList<string> rows, string buses, float timeLimitSeconds,
                                      out Level level, out List<string> errors)
         {
+            if (!TryRead(id, rows, buses, timeLimitSeconds, out var candidate, out errors))
+            {
+                level = null;
+                return false;
+            }
+            errors.AddRange(LevelValidator.Validate(candidate));
+            level = errors.Count == 0 ? candidate : null;
+            return level != null;
+        }
+
+        /// <summary>
+        /// Builds a level from a level file's text checking only the spelling, not the game rules: for
+        /// the level editor, which shows a level while it is still being made. Anything that plays or
+        /// saves a level uses <see cref="TryCreate"/>.
+        /// </summary>
+        public static bool TryRead(string id, IReadOnlyList<string> rows, string buses, float timeLimitSeconds,
+                                   out Level level, out List<string> errors)
+        {
             errors = new List<string>();
             level = null;
 
@@ -156,13 +174,7 @@ namespace HopOn.Logic
             {
                 return false;
             }
-            var candidate = new Level(id, width, height, cells, passengers, busColors.AsReadOnly(), timeLimitSeconds);
-            errors.AddRange(LevelValidator.Validate(candidate));
-            if (errors.Count > 0)
-            {
-                return false;
-            }
-            level = candidate;
+            level = new Level(id, width, height, cells, passengers, busColors.AsReadOnly(), timeLimitSeconds);
             return true;
         }
     }
