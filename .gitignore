@@ -38,6 +38,7 @@
 
 # Crash reports
 sysinfo.txt
+mono_crash.*.json
 
 # Builds
 *.apk
