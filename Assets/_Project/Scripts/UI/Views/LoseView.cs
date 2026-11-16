@@ -6,12 +6,17 @@ using UnityEngine.UI;
 
 namespace HopOn.UI
 {
-    /// <summary>The fail screen; its title names the reason, Retry replays the same level.</summary>
+    /// <summary>The fail screen; its title and icon name the reason, Retry replays the same level.</summary>
     [RequireComponent(typeof(UIScreen))]
     public sealed class LoseView : MonoBehaviour
     {
         [SerializeField] private Button retryButton;
         [SerializeField] private TMP_Text titleText;
+        [SerializeField] private Image icon;
+        [Tooltip("Shown when the time ran out.")]
+        [SerializeField] private Sprite timeUpIcon;
+        [Tooltip("Shown when the waiting seats are full.")]
+        [SerializeField] private Sprite noSpaceIcon;
 
         private UIScreen _screen;
 
@@ -30,7 +35,9 @@ namespace HopOn.UI
 
         public void Show(LoseReason reason, bool instant = false)
         {
-            titleText.text = reason == LoseReason.TimeUp ? "Time's Up!" : "No Space Left!";
+            bool timeUp = reason == LoseReason.TimeUp;
+            titleText.text = timeUp ? "Time's Up!" : "No Space Left!";
+            icon.sprite = timeUp ? timeUpIcon : noSpaceIcon;
             _screen.Show(instant);
         }
 
