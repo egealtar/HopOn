@@ -44,6 +44,12 @@ namespace HopOn.Data
             return -1;
         }
 
+        public string IdAt(int index)
+        {
+            TextAsset file = _catalog.Levels[index];
+            return file != null ? file.name : throw new InvalidDataException($"Entry {index + 1} of the level catalog is empty.");
+        }
+
         /// <summary>JSON text to a checked level, or false with every problem found.
         /// The tests read every shipped level through this same method.</summary>
         public static bool TryParse(string id, string json, out Level level, out List<string> errors)

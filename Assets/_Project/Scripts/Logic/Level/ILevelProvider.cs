@@ -16,5 +16,8 @@ namespace HopOn.Logic
         /// <summary>The index of the level with this id (its file name), or -1 if there is none.
         /// The save stores ids, not indexes, so progress follows the level when the list changes.</summary>
         int IndexOf(string levelId);
+
+        /// <summary>The id of level <paramref name="index"/>, without reading the level itself.</summary>
+        string IdAt(int index);
     }
 }
