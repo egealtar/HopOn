@@ -3,15 +3,17 @@ using System.Collections.Generic;
 namespace HopOn.Logic
 {
     /// <summary>
-    /// The game-rule checks that <see cref="Level.TryCreate"/> runs on every level, so a level that
-    /// could soft-lock a player never loads. Returns every problem at once, not just the first.
+    /// The checks that <see cref="Level.TryCreate"/> runs on every level: they refuse a level that is broken by
+    /// construction (no time, no bus, colour counts that do not match the bus seats, no exit, a passenger walled
+    /// in for good). Whether a level can be finished is <see cref="LevelSolver"/>'s question, asked by the level
+    /// editor and the tests. Returns every problem at once, not just the first.
     /// </summary>
     internal static class LevelValidator
     {
         public static List<string> Validate(Level level)
         {
             var errors = new List<string>();
-            if (level.TimeLimitSeconds <= 0f)
+            if (!(level.TimeLimitSeconds > 0f) || float.IsInfinity(level.TimeLimitSeconds))     // NaN fails every comparison
             {
                 errors.Add("The time limit must be more than 0 seconds.");
             }

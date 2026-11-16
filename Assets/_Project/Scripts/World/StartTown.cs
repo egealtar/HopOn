@@ -127,14 +127,14 @@ namespace HopOn.World
         [SerializeField] private float speed = 6f;
         [Tooltip("How long the street takes to reach full speed when it starts.")]
         [SerializeField] private float startSeconds = 0.8f;
-        [Tooltip("The same number gives the same street: the boot scene and the start screen must match.")]
+        [Tooltip("The same number gives the same street on every launch.")]
         [SerializeField] private int seed = 7;
         [Tooltip("A piece closer than this (behind the camera) goes back to the far end. The road lane " +
                  "needs farthest - nearest to be a whole number of road chunks.")]
         [SerializeField] private float nearest = -10f;
         [SerializeField] private float farthest = 110f;
 
-        [Header("Build In: the boot scene builds the street behind the logo")]
+        [Header("Build In: the intro builds the street behind the logo")]
         [Tooltip("Hidden from the start; builds when Build is called.")]
         [SerializeField] private bool buildIn;
         [Tooltip("Extra wait per metre of distance, so a lane builds from near to far.")]

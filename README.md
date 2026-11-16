@@ -9,8 +9,9 @@ Unity **2022.3.19f1**, URP, portrait, iOS and Android.
 - Open the project with Unity 2022.3.19f1. There is no Git LFS: a plain clone or ZIP works.
 - **Game:** `Assets/_Project/Scenes/Game.unity`. It is the only scene in the build. Press Play.
 - **Level editor:** `Assets/_Project/Scenes/LevelEditor.unity`. Press Play.
+- Both scenes are laid out for portrait: set the Game view to a portrait size such as 1080x1920 (or a phone in the Simulator) before pressing Play, not Free Aspect.
 - **Tests:** open Window > General > Test Runner > EditMode. There are 56 tests.
-- Progress is saved between runs. In the Unity Editor, **Hop On > Delete Save** starts over from level 1.
+- Progress is saved between runs. In the Unity Editor, **Hop On > Delete Save (start from level 1)** starts over from level 1.
 
 ## The brief, point by point
 
@@ -26,7 +27,7 @@ Unity **2022.3.19f1**, URP, portrait, iOS and Android.
 
 ## Architecture
 
-The dependencies go one way: Flow and Tools use World, UI and Data, and those use Logic. Logic uses nothing.
+Logic is its own assembly with no engine references and uses nothing; the compiler enforces that boundary. Everything else shares one assembly (`HopOn.Game`), split into folders by role: Flow and Tools sit on top, World draws the level, UI the screens, Data loads levels and saves.
 
 ```
 Assets/_Project/Scripts
@@ -93,7 +94,7 @@ A level is a JSON file in `Assets/_Project/Data/Levels`:
 - `buses` gives the bus colours in arrival order, one letter per bus.
 - The `LevelCatalog` asset lists the files in play order, which is also their number in the game.
 - The game reads levels through `ILevelProvider`, so a remote provider for live levels would plug in without other changes.
-- Every level is checked when it loads. A broken level is reported with its problems instead of being played, and the tests run the same checks on every shipped level:
+- Every level is checked when it loads. A broken level is refused with its problems logged (the editor will not save one, and the tests run the same checks on every shipped level):
   - the time is above zero and there is at least one bus;
   - each colour has exactly as many passengers as its buses have seats;
   - the top row has an exit;
@@ -118,7 +119,7 @@ A level is a JSON file in `Assets/_Project/Data/Levels`:
   - It runs off the main thread, never during a drag, within a budget of 20,000 positions.
   - It counts taking the last seat beside a bus as lost, so a level that only a perfectly timed race could finish counts as not finishable.
   - Saving such a level gives a warning.
-- **Test** plays the level right there with the real view. **Play solution** plays the solution the check found.
+- **Test** plays the level right there with the real view. While testing, **Play solution** plays the solution the check found, and **Stop** returns to editing.
 - Loading another level with unsaved edits asks first.
 
 ## Saving and resuming
@@ -131,6 +132,7 @@ A level is a JSON file in `Assets/_Project/Data/Levels`:
 - **How it is written:** to a temporary file first, which then replaces the old save in one step, so a crash never leaves half a save. A broken save starts the game fresh.
 - **How it resumes:** the saved moves are replayed through `LevelSession`. There is no separate copy of the board that could disagree with the rules.
   - The resumed level shows the bus at the stop, and a race that was running is decided in the player's favour.
+  - A level left with its last waiting seat taken beside a bus that cannot clear it is lost as soon as Play is pressed, as it would have been.
 - Progress is stored by level id, so it follows its level when the catalog changes.
 
 ## Performance
@@ -160,3 +162,4 @@ The game was tuned with measurements on a low-end Android phone (Realme C55).
 
 - Bus Jam's special passengers, for example hidden "?" passengers whose colour shows once a neighbour leaves. The level format and the editor would get a code and a brush for them.
 - A remote `ILevelProvider` for live levels, and more levels.
+- The level editor is one IMGUI class, kept simple on purpose; next it would split into the level document (cells, buses, time, undo), the panel and the file writer.
