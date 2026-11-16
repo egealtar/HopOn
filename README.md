@@ -21,7 +21,7 @@ Unity **2022.3.19f1**, URP, portrait, iOS and Android.
 | Timer as a fail condition | `LevelSession.Tick` loses the level with `TimeUp` at zero |
 | Level indicator | "Level N" in the HUD and on the start screen. The number follows the catalog and loops back to 1 after the last level |
 | Resume where the player left off | `SaveStore` and a replay of the saved moves (see below) |
-| 5+ unique levels | `Data/Levels/Level_01` to `Level_05`. A test checks that each one can be finished |
+| 5+ unique levels | 6 levels, `Data/Levels/Level_01` to `Level_06`. A test checks that each one can be finished |
 | Level editor: add levels, update levels, edit the timer | `Scenes/LevelEditor.unity` (see below) |
 
 ## Architecture
