@@ -30,7 +30,7 @@ namespace HopOn.UI
 
         public void Show(LoseReason reason, bool instant = false)
         {
-            titleText.text = reason == LoseReason.TimeUp ? "Time's Up!" : "No Seats Left!";
+            titleText.text = reason == LoseReason.TimeUp ? "Time's Up!" : "No Space Left!";
             _screen.Show(instant);
         }
 
