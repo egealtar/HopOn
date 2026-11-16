@@ -6,7 +6,7 @@ namespace HopOn.World
     /// <summary>
     /// The world's colour grade, applied inside the world's shaders (Art/Grading/Shaders/HopOnGrade.hlsl)
     /// instead of by a post-processing pass: a colour-grading LUT, the post exposure and the vignette, all
-    /// baked from the post-processing Volume by Hop On > Bake Color Grade. Before the first scene loads it
+    /// matching the post-processing Volume. Before the first scene loads it
     /// hands them to every shader as globals. It lives in Resources (Resources/ColorGrade.asset), so nothing
     /// has to reference it.
     /// </summary>

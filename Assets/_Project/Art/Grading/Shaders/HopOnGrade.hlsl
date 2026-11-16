@@ -3,9 +3,8 @@
 // It does what URP's UberPost did with our Volume (Color Adjustments + Vignette), in the same order:
 //   1. vignette, before the grade, in linear colour;
 //   2. post exposure (2^EV), then clamp to 0..1 (tonemapping None);
-//   3. the LDR colour-grading LUT, baked from the Volume by Hop On > Bake Color Grade with URP's own
-//      LutBuilderLdr shader, so every Volume setting (contrast, saturation, white balance, curves...)
-//      comes out the same.
+//   3. the LDR colour-grading LUT (Art/Grading/HopOn_GradeLut.png), in the layout URP's own LDR LUT uses,
+//      so every Volume setting (contrast, saturation, white balance, curves...) comes out the same.
 // The post pass cost ~11 ms a frame on the Realme C55 not for this maths but for its full-screen
 // round trip through memory (the scene written out to a texture, read back, written to the screen);
 // here each pixel is graded while it is still in the GPU's tile memory, in the pass that draws it.
