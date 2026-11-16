@@ -22,6 +22,13 @@ namespace HopOn.Logic
         {
         }
 
+        internal WaitingArea Clone()
+        {
+            var copy = new WaitingArea { Occupied = Occupied };
+            Array.Copy(_seats, copy._seats, _seats.Length);
+            return copy;
+        }
+
         /// <summary>Seats the passenger in the first free seat and returns that seat.</summary>
         internal int Sit(Passenger passenger)
         {
@@ -34,8 +41,8 @@ namespace HopOn.Logic
                     return seat;
                 }
             }
-            // The session ends the level as soon as the last seat fills, so this is a bug, not a game state.
-            throw new InvalidOperationException("No free waiting seat: the level should already be lost.");
+            // The session checks IsFull before seating anyone, so this is a bug, not a game state.
+            throw new InvalidOperationException("No free waiting seat.");
         }
 
         internal void StandUp(int seat)

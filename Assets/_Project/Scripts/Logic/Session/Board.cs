@@ -30,6 +30,15 @@ namespace HopOn.Logic
             }
         }
 
+        private Board(Level level, Passenger[] cells)
+        {
+            _level = level;
+            _cells = cells;
+        }
+
+        /// <summary>A separate board with the same passengers on it, for looking ahead (see <see cref="LevelSolver"/>).</summary>
+        internal Board Clone() => new Board(_level, (Passenger[])_cells.Clone());
+
         public CellType CellAt(GridPos p) => _level.CellAt(p);
         public bool IsExit(GridPos p) => _level.IsExit(p);
 

@@ -21,6 +21,10 @@ namespace HopOn.World
         /// <summary>Riders who have actually sat down on screen. The bus drives off only when all are in.</summary>
         public int Seated { get; set; }
 
+        /// <summary>Riders who have crossed the line in front of the waiting seats on screen (or came from a
+        /// waiting seat, beyond it already): once all of a bus the logic sent away have, they made it.</summary>
+        public int Arrived { get; set; }
+
         public void Paint(Material color)
         {
             foreach (Renderer part in paintedParts)
